@@ -185,6 +185,7 @@ export default function IDE({
 				audio: true,
 			})
 			.then((stream) => {
+				console.log(stream);
 				addVideoStream(myVideoCont, myVideo, stream);
 				setMyvideoon(true);
 				setMystream(stream);
@@ -211,6 +212,8 @@ export default function IDE({
 					const call = peer.call(userId, stream, {
 						metadata: { name: userName },
 					});
+
+					console.log("Hello", call);
 					const video = document.createElement("video");
 					const videoCont = document.createElement("div");
 					videoCont.appendChild(video);
@@ -252,6 +255,7 @@ export default function IDE({
 			})
 			.then((stream) => {
 				addVideoStream(myVideoCont, myVideo, stream);
+				console.log(stream);
 				setMyvideoon(true);
 				setMystream(stream);
 				replaceStream(stream);
@@ -278,6 +282,7 @@ export default function IDE({
 					const call = peer.call(userId, stream, {
 						metadata: { name: userName },
 					});
+					console.log("stream", stream);
 					const video = document.createElement("video");
 					const videoCont = document.createElement("div");
 					videoCont.className = "videoContainer rounded mb-4";
@@ -316,7 +321,7 @@ export default function IDE({
 		if (myStream.getAudioTracks()[0].enabled) {
 			toggledVideo.classList.remove("audio-off");
 		} else {
-			toggledVideo.classList.add("audio-off");
+			toggledVideo?.classList.add("audio-off");
 		}
 		socket.emit(
 			"toggled",
@@ -334,7 +339,7 @@ export default function IDE({
 					track.stop();
 				}
 			});
-			// console.log(myStream.getVideoTracks()[0].enabled);
+			console.log(myStream.getVideoTracks()[0].enabled);
 			setMyvideoon(false);
 		} else {
 			addVideo();
@@ -417,7 +422,7 @@ export default function IDE({
 
 		const onColorUpdate = (e) => {
 			let objectColor;
-			for (let i = 0; i < e.path.length; i++) {
+			for (let i = 0; i < e.path?.length; i++) {
 				if (e.path[i].dataset.color) {
 					if (e.path[i].dataset.color === "white") objectColor = "#ffffff";
 					else objectColor = pencilColor;
