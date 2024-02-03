@@ -17,8 +17,8 @@ import "codemirror/mode/perl/perl";
 import "codemirror/mode/php/php";
 import "codemirror/mode/ruby/ruby";
 
-// import Peer from "peerjs";
-import Peer from "simple-peer";
+import Peer from "peerjs";
+// import Peer from "simple-peer";
 
 import closeIcon from "../images/icons/close.png";
 import muteIcon from "../images/icons/mute.svg";
@@ -87,6 +87,7 @@ export default function IDE({
   const [userId, setUserId] = useState(null);
   const [myvideoon, setMyvideoon] = useState(true);
   const [pencilColor, setPencilColor] = useState("#000000");
+  const [peerAdded, setPeerAdded] = useState(false);
 
   useEffect(() => {
     ReactGA.pageview("IDE-screen");
@@ -94,11 +95,11 @@ export default function IDE({
     setSocket(TempSocket);
     const peer = new Peer(undefined, {
       host: process.env.REACT_APP_BACKEND_ENDPOINT,
-      port: 443,
+      port: 9002,
       path: "/",
     });
+    console.log(peer);
     setPeer(peer);
-
     return () => {
       TempSocket.disconnect();
     };
@@ -194,28 +195,10 @@ export default function IDE({
         audio: true,
       })
       .then((stream) => {
-        console.log(stream);
+        console.log(stream, socket);
         addVideoStream(myVideoCont, myVideo, stream);
         setMyvideoon(true);
         setMystream(stream);
-        peer.on("call", (call) => {
-          call.answer(stream);
-          const video = document.createElement("video");
-          const videoCont = document.createElement("div");
-          videoCont.appendChild(video);
-          videoCont.id = call.peer;
-          videoCont.dataset.name = call.metadata.name;
-          videoCont.className = "videoContainer rounded mb-4";
-          call.on("stream", (anotherUserVideoStream) => {
-            addVideoStream(videoCont, video, anotherUserVideoStream);
-          });
-
-          call.on("close", () => {
-            video.remove();
-            videoCont.remove();
-          });
-          peers[call.peer] = call;
-        });
 
         socket.on("user-connected", (userId) => {
           const call = peer.call(userId, stream, {
@@ -230,6 +213,7 @@ export default function IDE({
           videoCont.dataset.name = call.metadata.name;
           videoCont.className = "videoContainer rounded mb-4";
           call.on("stream", (anotherUserVideoStream) => {
+            console.log("Hello I am now on stream event");
             addVideoStream(videoCont, video, anotherUserVideoStream);
           });
 
@@ -246,6 +230,7 @@ export default function IDE({
     });
 
     peer.on("open", (id) => {
+      console.log("Hii the connection is opened now", id);
       setUserId(id);
       myVideoCont.id = id;
       myVideoCont.dataset.name = userName;
@@ -256,6 +241,8 @@ export default function IDE({
 
   const addVideo = useCallback(() => {
     if (socket == null) return;
+
+    console.log("Now add video function is working");
 
     navigator.mediaDevices
       .getUserMedia({
@@ -324,6 +311,119 @@ export default function IDE({
     // eslint-disable-next-line
   }, [socket, docId, peer]);
 
+  // console peers
+
+  useEffect(() => {
+    var remove = setInterval(() => {
+      var parentContainer = document.getElementById("video-grid");
+      var encounteredIds = {};
+      var children = parentContainer.children;
+      for (var i = 0; i < children.length; i++) {
+        var child = children[i];
+        var id = child.id;
+        if (encounteredIds[id]) {
+          parentContainer.removeChild(child);
+        } else {
+          encounteredIds[id] = true;
+        }
+      }
+    }, 5000);
+  }, []);
+
+  useEffect(() => {
+    if (socket == null) return;
+
+    console.log("Now add video function is working");
+
+    navigator.mediaDevices
+      .getUserMedia({
+        video: true,
+        audio: true,
+      })
+      .then((stream) => {
+        addVideoStream(myVideoCont, myVideo, stream);
+        console.log(stream);
+        setMyvideoon(true);
+        setMystream(stream);
+        replaceStream(stream);
+
+        peer.on("call", (call) => {
+          call.answer(stream);
+          console.log(peers);
+          if (peers[call.peer]) {
+            return;
+          }
+          let isUserPresent = document.getElementById(call.peer);
+
+          console.log(call.peer, isUserPresent);
+
+          if (isUserPresent) {
+            return;
+          }
+          const video = document.createElement("video");
+          const videoCont = document.createElement("div");
+          videoCont.className = "videoContainer rounded mb-4";
+          videoCont.appendChild(video);
+          videoCont.id = call.peer;
+          videoCont.dataset.name = call.metadata.name;
+          call.on("stream", (anotherUserVideoStream) => {
+            addVideoStream(videoCont, video, anotherUserVideoStream);
+          });
+          call.on("close", () => {
+            video.remove();
+            videoCont.remove();
+          });
+          peers[call.peer] = call;
+        });
+
+        socket.on("user-connected", (userId) => {
+          if (peers[userId]) {
+            return;
+          }
+          const call = peer.call(userId, stream, {
+            metadata: { name: userName },
+          });
+
+          let isUserPresent = document.getElementById(userId);
+
+          console.log(userId, isUserPresent);
+
+          if (isUserPresent) {
+            return;
+          }
+          console.log(userId);
+          console.log("stream", stream);
+          const video = document.createElement("video");
+          const videoCont = document.createElement("div");
+          videoCont.className = "videoContainer rounded mb-4";
+          videoCont.appendChild(video);
+          videoCont.id = userId;
+          videoCont.dataset.name = call.metadata.name;
+          call.on("stream", (anotherUserVideoStream) => {
+            addVideoStream(videoCont, video, anotherUserVideoStream);
+          });
+          call.on("close", () => {
+            video.remove();
+            videoCont.remove();
+          });
+          peers[userId] = call;
+        });
+
+        setPeerAdded(true);
+      });
+
+    socket.on("user-disconnected", (userId) => {
+      if (peers[userId]) peers[userId].close();
+    });
+
+    peer.on("open", (id) => {
+      setUserId(id);
+      myVideoCont.id = id;
+      myVideoCont.dataset.name = userName;
+      socket.emit("join-room", docId, id);
+    });
+  }, [socket, docId, peer]);
+
   const muteMic = () => {
     myStream.getAudioTracks()[0].enabled =
       !myStream.getAudioTracks()[0].enabled;
@@ -360,9 +460,9 @@ export default function IDE({
     try {
       const toggledVideo = document.getElementById(userId);
       if (myStream.getVideoTracks()[0].enabled) {
-        toggledVideo.classList.remove("video-off");
+        toggledVideo?.classList.remove("video-off");
       } else {
-        toggledVideo.classList.add("video-off");
+        toggledVideo?.classList.add("video-off");
       }
     } catch (err) {
       console.log(err);
