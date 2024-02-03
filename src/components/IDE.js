@@ -85,7 +85,7 @@ export default function IDE({
 		var TempSocket = io(process.env.REACT_APP_BACKEND_ENDPOINT_URL);
 		setSocket(TempSocket);
 		const peer = new Peer(undefined, {
-			host: "localhost",
+			host: process.env.REACT_APP_BACKEND_ENDPOINT,
 			port: 9002,
 			path: "/",
 		});
