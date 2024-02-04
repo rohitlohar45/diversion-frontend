@@ -13,6 +13,9 @@ export default function Preview({ docId }) {
 
 	useEffect(() => {
 		const user = JSON.parse(localStorage.getItem("user"));
+		if (user) {
+			setIsAuthenticated(true);
+		}
 		setUserType(user.userType);
 		setUser(user);
 		console.log("userType", user["userType"], user.userType);
