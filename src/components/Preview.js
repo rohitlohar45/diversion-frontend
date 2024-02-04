@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import ReactGA from "react-ga";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Login, Logout } from "./auth/Auth0";
+import { useAuth } from "../context/AuthProvider";
 // import "Preview.css";
 export default function Preview({ docId }) {
-	const [isAuthenticated, setIsAuthenticated] = useState(false);
+	// const [isAuthenticated, setIsAuthenticated] = useState(false);
 	const [userType, setUserType] = useState("");
 	const [user, setUser] = useState({});
+	const { isAuthenticated } = useAuth();
 	useEffect(() => {
 		ReactGA.pageview("preview-screen");
 	}, []);
