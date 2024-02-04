@@ -33,6 +33,7 @@ function App() {
 	const [isDocId, setIsDocId] = useState(false);
 	const user = localStorage.getItem("user");
 	const { isAuthenticated } = useAuth();
+	const [isLoggedIn, setIsLoggedIn] = useState(false);
 	const [isInputBoxShown, setisInputBoxShown] = useState(true);
 
 	useEffect(() => {
@@ -51,6 +52,11 @@ function App() {
 				label: `${user.email}`,
 			});
 		}
+		let user = JSON.parse(localStorage.getItem("user"));
+		if (user) {
+			setIsLoggedIn(true);
+		}
+		console.log(isAuthenticated);
 		// eslint-disable-next-line
 	}, []);
 
@@ -180,7 +186,7 @@ function App() {
 		setModal(!modal);
 	};
 
-	return isAuthenticated ? (
+	return isAuthenticated || isLoggedIn ? (
 		<div className="h-screen bg-primary-5 flex flex-grow flex-col">
 			{isDocId ? (
 				<>
