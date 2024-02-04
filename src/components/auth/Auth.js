@@ -20,7 +20,7 @@ function Auth() {
 		}
 
 		try {
-			const response = await axios.post("http://localhost:3002/register", {
+			const response = await axios.post(process.env.REACT_APP_BACKEND_ENDPOINT_URL + "/register", {
 				email,
 				username,
 				userType,
@@ -35,25 +35,12 @@ function Auth() {
 
 	const handleLogin = async () => {
 		try {
-			const response = await axios.post("http://localhost:3002/login", {
+			const response = await axios.post(process.env.REACT_APP_BACKEND_ENDPOINT_URL + "/login", {
 				email,
 				password,
 			});
 			localStorage.setItem("user", JSON.stringify(response.data));
 			login();
-		} catch (error) {
-			console.error(error);
-		}
-	};
-
-	const handleProtectedRoute = async () => {
-		try {
-			const response = await axios.get("http://localhost:3000/protected", {
-				headers: {
-					Authorization: `Bearer ${token}`,
-				},
-			});
-			console.log(response.data);
 		} catch (error) {
 			console.error(error);
 		}
@@ -100,7 +87,6 @@ function Auth() {
 				{isRegistering ? "Switch to Login" : "Switch to Register"}
 			</button>
 			<br />
-			<button onClick={handleProtectedRoute}>Access Protected Route</button>
 		</div>
 	);
 }
